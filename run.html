@@ -1,118 +1,252 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" manifest="cache.appcache">
  <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-   
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>jailbreak</title>
   <style>
-html,body{margin:0;width:100%;height:100%;color:#ffffff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}
-body{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background-image: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1920');
-  background-size: cover;
-  background-position: center;
-}
+      :root {
+        --bg-color: #07090d;
+        --card-bg: rgba(14, 18, 24, 0.75);
+        --border-color: rgba(255, 255, 255, 0.08);
+        --accent-green: #34d399;
+        --accent-glow: rgba(52, 211, 153, 0.25);
+        --text-main: #f3f4f6;
+        --text-muted: #9ca3af;
+      }
 
-/* Camada que vai cobrir a tela toda no final */
-#fullscreen-finish {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-image: url('https://files.catbox.moe/31t482.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: 9999; /* Garante que fica por cima de tudo */
-}
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at center, #111827 0%, var(--bg-color) 100%);
+        color: var(--text-main);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
 
-.card{
-  width: 100vw;
-  height: 100vh;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 35px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  box-shadow: none;
-}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.brand{font-weight:900;letter-spacing:3px;color:#ffffff}
+      #brand {
+        text-align: center;
+        padding: 16px;
+        background: rgba(14, 18, 24, 0.9);
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
 
-pre{
-  flex-grow:1;
-  overflow:auto;
-  background: rgba(5, 5, 7, 0.85);
-  border: none;
-  border-radius: 0;
-  padding: 14px;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font: 12px Consolas, monospace;
-  color: #ffffff;
-  margin-top: 10px;
-}
-.ok{color:#56e39f}.bad{color:#ff5277}.warn{color:#ffd166}.actions{display:none;gap:10px;margin-top:15px}button{border:0;border-radius:0;padding:12px 16px;background:#ff6600;font-weight:800;cursor:pointer}
-</style>
+      #brand span {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        background: var(--accent-green);
+        border-radius: 50%;
+        box-shadow: 0 0 10px var(--accent-green);
+        animation: pulse 2s infinite ease-in-out;
+      }
+
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.3); opacity: 0.6; }
+      }
+
+      #brand b {
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 0.2em;
+        color: #ffffff;
+        text-shadow: 0 0 12px var(--accent-glow);
+      }
+
+      /* Container Central de Carregamento / Status */
+      .container {
+        max-width: 420px;
+        margin: auto;
+        padding: 32px 24px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        text-align: center;
+      }
+
+      #spin {
+        font-size: 44px;
+        font-weight: 800;
+        color: var(--accent-green);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        letter-spacing: -1px;
+        text-shadow: 0 0 20px var(--accent-glow);
+        margin-bottom: 8px;
+      }
+
+      #msg {
+        font-size: 14px;
+        color: var(--text-muted);
+        letter-spacing: 0.3px;
+        font-weight: 500;
+      }
+
+      /* Tela cheia overlay para a imagem ao terminar */
+      #fullscreen-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+        z-index: 999999;
+        display: none;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #fullscreen-overlay img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      body.done #fullscreen-overlay {
+        display: flex;
+      }
+
+      body.done .container, 
+      body.done #brand {
+        display: none;
+      }
+
+      body.done #spin { color: #60a5fa; text-shadow: 0 0 20px rgba(96, 165, 250, 0.25); }
+      body.fail #spin { color: #f87171; text-shadow: 0 0 20px rgba(248, 113, 113, 0.25); }
+      body.fail #msg { color: #f87171; font-weight: 600; }
+      body.done #msg { color: #34d399; font-weight: 700; letter-spacing: 1px; }
+
+      #wrap {
+        padding: 0;
+      }
+      #state,
+      #out {
+        display: none;
+      }
+
+      /* Modo de Log Completo (?log=1) */
+      body.log {
+        display: block;
+      }
+      body.log .container,
+      body.log #fullscreen-overlay {
+        display: none !important;
+      }
+      body.log #wrap {
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      body.log #state {
+        display: block;
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 12px;
+        color: var(--text-main);
+      }
+      body.log #out {
+        display: block;
+        white-space: pre-wrap;
+        font: 12.5px/1.6 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        background: #040507;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+        height: calc(100vh - 150px);
+        overflow-y: auto;
+        color: var(--text-muted);
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+      }
+
+      .ok { color: #34d399; }
+      .bad { color: #f87171; }
+      .warn { color: #fbbf24; }
+      .safe { color: #34d399; }
+      .danger { color: #f87171; }
+      code { color: #93c5fd; }
+    </style>
  </head>
  <body>
-  <!-- Tela cheia que vai cobrir tudo quando finalizar -->
-  <div id="fullscreen-finish"></div>
+  <div id="brand">
+   <span></span><b>JaIlBrEaK Ps4 bY fro0kidd</b>
+  </div>
+  
+  <div class="container">
+   <div id="spin">0%</div>
+   <div id="msg">Iniciando ambiente...</div>
+  </div>
 
-  <div class="card">
-   <div class="top">
-    <div class="brand">jailbreak ps4 by fro0kidd</div>
-   </div>
-   
-   <pre id="out"></pre>
-   <div class="actions" id="actions">
-    <button onclick="location.reload()">RETRY</button>
-   </div>
+  <div id="fullscreen-overlay">
+   <img src="https://files.catbox.moe/31t482.jpg" alt="Finalizado">
+  </div>
+
+  <div id="wrap">
+   <div id="state"></div>
+   <div id="out"></div>
   </div>
 
   <script>
-(function(){
-  const out=document.getElementById('out'), actions=document.getElementById('actions'), finishImg=document.getElementById('fullscreen-finish');
-  
-  window.reportExploitProgress=function(stage,name,percent,detail){
-    if(detail) append('[PROGRESS] '+detail,'');
-  };
-  
-  function append(s,cls){ const line=document.createElement('div'); line.textContent='['+new Date().toLocaleTimeString()+'] '+s; if(cls)line.className=cls; out.appendChild(line); out.scrollTop=out.scrollHeight; }
-  
-  window.onZoofComplete=function(status){
-    if(status && status.success){
-      append('SUCCESS: kernel patch and payload completed.','ok');
-      // Mostra a imagem cobrindo a tela toda
-      finishImg.style.display = 'block';
-    } else { 
-      actions.style.display='flex'; 
-      append('FAIL: completed='+!!(status&&status.completed)+' kpatched='+!!(status&&status.kpatched)+' payloadRunning='+!!(status&&status.payloadRunning),'bad'); 
+    const spinEl = document.getElementById("spin");
+    const msgEl = document.getElementById("msg");
+
+    function updateProgress(percent, text) {
+      spinEl.textContent = percent + "%";
+      if (text) msgEl.textContent = text;
     }
-  };
-  
-  window.showExploitError=function(msg){ actions.style.display='flex'; append('ERROR: '+(msg||'unknown'),'bad'); };
-  
-  window.addEventListener('error',function(e){append('JS ERROR: '+(e.message||e.error||'unknown'),'bad');});
-  append('RUN launcher loaded. Target locked to PS4 13.52.','ok');
-  append('Loading jb.js / core.js / memory / offsets…');
-})();
-</script>
+
+    var ac = window.applicationCache;
+    if (ac) {
+      ac.addEventListener("checking", () => updateProgress(15, "Verificando atualizações..."), false);
+      ac.addEventListener("downloading", () => updateProgress(35, "Baixando recursos offline..."), false);
+      ac.addEventListener("progress", (e) => {
+        if (e && e.total > 0) {
+          var pct = Math.floor((e.loaded / e.total) * 55) + 35;
+          updateProgress(pct, `Sincronizando (${e.loaded}/${e.total})...`);
+        }
+      }, false);
+      ac.addEventListener("cached", () => updateProgress(100, "Cache salvo com sucesso!"), false);
+      ac.addEventListener("noupdate", () => updateProgress(100, "Sistema pronto e atualizado."), false);
+      ac.addEventListener("updateready", () => updateProgress(100, "Atualização aplicada com sucesso."), false);
+      ac.addEventListener("error", () => {
+        msgEl.textContent = "Erro no cache (abrindo modo direto)...";
+      }, false);
+    }
+
+    const stateEl = document.getElementById("state");
+    const observer = new MutationObserver(() => {
+      if (stateEl.textContent) {
+        msgEl.textContent = stateEl.textContent;
+        if (document.body.classList.contains("done")) {
+          updateProgress(100, "Concluído com sucesso!");
+        } else if (document.body.classList.contains("fail")) {
+          updateProgress(0, "Falha na inicialização.");
+        }
+      }
+    });
+    observer.observe(stateEl, { childList: true, characterData: true, subtree: true });
+
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        if (spinEl.textContent === "0%") {
+          updateProgress(100, "Ambiente pronto.");
+        }
+      }, 2000);
+    });
+  </script>
+
   <script type="module">
-(async function () {
-  try {
-    await import("./jb.js?fw=1352");
-  } catch (e) {
-    if (typeof showExploitError === "function")
-      showExploitError(e && e.message ? e.message : String(e));
-  }
-})();
-</script>
+      import "./jb.js?v=19";
+    </script>
  </body>
 </html>
